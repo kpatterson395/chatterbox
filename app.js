@@ -71,8 +71,9 @@ const isLoggedIn = (req, res, next) => {
 };
 
 app.get("/", async (req, res) => {
-  const messages = await Message.find({});
-  console.log(req.user);
+  const messages = await Message.find({}).populate({
+    path: "author",
+  });
   res.render("home", { messages });
 });
 
@@ -92,6 +93,7 @@ app.post(
   "/login",
   passport.authenticate("local", { failureRedirect: "/login" }),
   (req, res) => {
+    req.flash("success", `Welcome to chatterbox, ${req.user.username}`);
     res.redirect("/");
   }
 );
@@ -101,15 +103,13 @@ app.post("/register", async (req, res) => {
     const { username, email, password } = req.body.user;
     const user = new User({ username, email });
     const newUser = await User.register(user, password);
-    console.log(newUser);
     req.login(newUser, (err) => {
       if (err) return next(err);
-      // req.flash("success", "Welcome to chatterbox");
+      req.flash("success", `Welcome to chatterbox, ${newUser}`);
       res.redirect("/");
     });
   } catch (e) {
-    console.log(e);
-    // req.flash("error", e.message);
+    req.flash("error", e.message);
     res.redirect("/register");
   }
 });
@@ -119,8 +119,7 @@ app.get("/logout", (req, res) => {
     if (err) {
       return console.log(err);
     }
-    // req.flash("success", "Goodbye!");
-    console.log("goodbye");
+    req.flash("success", "Goodbye!");
     res.redirect("/");
   });
 });
@@ -131,13 +130,13 @@ app.get("/messages/edit/:id", isLoggedIn, async (req, res) => {
 });
 
 app.post("/messages", isLoggedIn, async (req, res) => {
-  const message = new Message(req.body.message);
+  const message = new Message({ ...req.body.message, likes: [] });
+  message.author = req.user._id;
   await message.save();
   res.redirect("/");
 });
 
 app.put("/messages/:id", isLoggedIn, async (req, res) => {
-  console.log(req.body.message);
   const { id } = req.params;
   const newmess = await Message.findByIdAndUpdate(id, { ...req.body.message });
   res.redirect("/");
@@ -145,10 +144,13 @@ app.put("/messages/:id", isLoggedIn, async (req, res) => {
 
 app.patch("/messages/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { likes } = req.body;
-  const newmess = await Message.findByIdAndUpdate(id, {
-    likes: Number(likes) + 1,
-  });
+  const newmess = await Message.findById(id);
+  if (newmess.likes.includes(req.user._id)) {
+    newmess.likes = newmess.likes.filter((x) => x === req.user._id);
+  } else {
+    newmess.likes.push(req.user._id);
+  }
+  await newmess.save();
 
   res.redirect("/");
 });

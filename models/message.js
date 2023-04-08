@@ -15,16 +15,14 @@ const MessageSchema = new Schema({
     type: String,
     required: true,
   },
-  //   author: {
-  //     type: Schema.Types.ObjectId,
-  //     ref: "User",
-  //   },
-  likes: {
-    type: Number,
-    default: 0,
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
   },
+  likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 });
 
+// array of user ids for likes
 // const Message = mongoose.model("Message", MessageSchema);
 
 // const newmess = new Message({

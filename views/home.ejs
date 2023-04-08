@@ -1,17 +1,17 @@
-<%- layout("./layouts/boilerplate") %>
-
-<p>
-  Leave a message, respond to a message, upvote a message, or just hang out!
-</p>
-<% for(let m of messages){ %>
-<div class="card" style="width: 18rem">
+<%- layout("./layouts/boilerplate") %> <% for(let m of messages){ %>
+<div class="card mb-3" style="width: 18rem">
   <!-- <img src="..." class="card-img-top" alt="..."> -->
   <div class="card-body">
     <p class="card-text"><%= m.body %></p>
+    <p class="card-text"><%= m.author.username %></p>
     <form action="/messages/<%=m._id%>?_method=PATCH" method="POST">
       <input type="hidden" name="likes" value="<%= m.likes %>" />
-      <button class="btn btn-primary">
-        <%= m.likes %>
+       <% if(currentUser && m.likes.includes(currentUser._id) ){ %>
+           <button class="btn btn-primary">
+             <%} else {%>
+              <button class="btn btn-secondary">
+                 <%}%>
+        <%= m.likes.length %>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
