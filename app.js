@@ -105,7 +105,7 @@ app.post("/register", async (req, res) => {
     const newUser = await User.register(user, password);
     req.login(newUser, (err) => {
       if (err) return next(err);
-      req.flash("success", `Welcome to chatterbox, ${newUser}`);
+      req.flash("success", `Welcome to chatterbox, ${req.user.username}`);
       res.redirect("/");
     });
   } catch (e) {
@@ -146,7 +146,7 @@ app.patch("/messages/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const newmess = await Message.findById(id);
   if (newmess.likes.includes(req.user._id)) {
-    newmess.likes = newmess.likes.filter((x) => x === req.user._id);
+    newmess.likes = newmess.likes.filter((x) => !x.equals(req.user._id));
   } else {
     newmess.likes.push(req.user._id);
   }

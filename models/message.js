@@ -22,13 +22,5 @@ const MessageSchema = new Schema({
   likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 });
 
-// array of user ids for likes
-// const Message = mongoose.model("Message", MessageSchema);
-
-// const newmess = new Message({
-//   body: "first message!",
-//   likes: 2,
-// });
-
 // newmess.save();
 module.exports = mongoose.model("Message", MessageSchema);

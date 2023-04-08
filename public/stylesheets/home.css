@@ -1,3 +1,16 @@
 .header {
   font-family: "Lilita One", cursive;
 }
+
+.main-card {
+  width: 70%;
+  margin-left: 15%;
+}
+
+.delete-form {
+  display: inline-block;
+}
+
+.message-body {
+  width: 80%;
+}
