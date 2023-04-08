@@ -15,13 +15,13 @@
       <a class="edit-button card-link btn btn-success" href="/messages/edit/<%=m._id%>"
         >Edit</a
       >
-      <form action="/messages/<%=m._id%>?_method=DELETE" method="POST" class="delete-form">
+      <form action="/messages/<%=m._id%>?_method=DELETE" method="POST" class="inline-form">
         <button class="btn btn-danger">Delete</button>
       </form>
     </div>
   </div>
   <div class="card-body">
-    <form action="/messages/<%=m._id%>?_method=PATCH" method="POST">
+    <form action="/messages/<%=m._id%>?_method=PATCH" method="POST" class="inline-form">
       <input type="hidden" name="likes" value="<%= m.likes %>" />
       <% if(currentUser && m.likes.includes(currentUser._id) ){ %>
         <button class="btn btn-primary">
@@ -44,6 +44,9 @@
         <%= m.likes.length %>
       </button>
     </form>
+    <a class="btn btn-success" href="/messages/show/<%=m._id%>"
+        >Read More</a
+      >
   </div>
 </div>
 

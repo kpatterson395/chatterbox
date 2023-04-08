@@ -129,6 +129,13 @@ app.get("/messages/edit/:id", isLoggedIn, async (req, res) => {
   res.render("edit", { message });
 });
 
+app.get("/messages/show/:id", async (req, res) => {
+  const message = await Message.findById(req.params.id).populate({
+    path: "author",
+  });
+  res.render("show", { message });
+});
+
 app.post("/messages", isLoggedIn, async (req, res) => {
   const message = new Message({ ...req.body.message, likes: [] });
   message.author = req.user._id;
