@@ -20,6 +20,7 @@ const MessageSchema = new Schema({
     ref: "User",
   },
   likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
 });
 
 // newmess.save();

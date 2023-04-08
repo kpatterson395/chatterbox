@@ -11,7 +11,9 @@
          - <span class="card-text"><%= m.author.username %></span>
       </p>
     </div>
-    <div>
+          <% if(currentUser && currentUser._id.equals(m.author._id)){%>
+
+    <div>      
       <a class="edit-button card-link btn btn-success" href="/messages/edit/<%=m._id%>"
         >Edit</a
       >
@@ -19,6 +21,7 @@
         <button class="btn btn-danger">Delete</button>
       </form>
     </div>
+    <%}%>
   </div>
   <div class="card-body">
     <form action="/messages/<%=m._id%>?_method=PATCH" method="POST" class="inline-form">

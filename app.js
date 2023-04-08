@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const ejsmate = require("ejs-mate");
 
@@ -7,10 +11,11 @@ const Message = require("./models/message");
 const methodOverride = require("method-override");
 const passport = require("passport");
 const User = require("./models/user");
+const Comment = require("./models/comment");
 const LocalStrategy = require("passport-local");
 const session = require("express-session");
 const flash = require("connect-flash");
-
+const MongoDBStore = require("connect-mongo");
 const app = express();
 
 app.engine("ejs", ejsmate);
@@ -24,8 +29,11 @@ const port = process.env.PORT || 3000;
 const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/chatbox";
 const secret = process.env.secret || "thisisasecret";
 
+const store = MongoDBStore.create({ mongoUrl: dbUrl });
+
 const sessionConfig = {
   secret,
+  store,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -46,7 +54,7 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 mongoose
-  .connect("mongodb://localhost:27017/chatbox")
+  .connect(dbUrl)
   .then(() => {
     console.log("MONGO CONNECTION OPEN");
   })
@@ -126,13 +134,24 @@ app.get("/logout", (req, res) => {
 
 app.get("/messages/edit/:id", isLoggedIn, async (req, res) => {
   const message = await Message.findById(req.params.id);
-  res.render("edit", { message });
+  if (req.user._id.equals(message.author)) {
+    res.render("edit", { message });
+  } else {
+    res.redirect("/");
+  }
 });
 
 app.get("/messages/show/:id", async (req, res) => {
-  const message = await Message.findById(req.params.id).populate({
-    path: "author",
-  });
+  const message = await Message.findById(req.params.id)
+    .populate({
+      path: "author",
+    })
+    .populate({
+      path: "comments",
+      populate: {
+        path: "author",
+      },
+    });
   res.render("show", { message });
 });
 
@@ -152,6 +171,7 @@ app.put("/messages/:id", isLoggedIn, async (req, res) => {
 app.patch("/messages/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const newmess = await Message.findById(id);
+  const redirectURL = req.session.returnTo || "/";
   if (newmess.likes.includes(req.user._id)) {
     newmess.likes = newmess.likes.filter((x) => !x.equals(req.user._id));
   } else {
@@ -159,12 +179,29 @@ app.patch("/messages/:id", isLoggedIn, async (req, res) => {
   }
   await newmess.save();
 
-  res.redirect("/");
+  res.redirect(redirectURL);
+});
+
+// add comments
+app.patch("/comment/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const message = await Message.findById(id);
+  const comment = new Comment({
+    body: req.body.comment,
+    author: req.user._id,
+  });
+  message.comments.push(comment._id);
+  await comment.save();
+  await message.save();
+  res.redirect(`/messages/show/${id}`);
 });
 
 app.delete("/messages/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const message = await Message.findByIdAndDelete(id);
+  const message = await Message.findById(id);
+  if (req.user._id.equals(message.author)) {
+    const deleted = await Message.findByIdAndDelete(id);
+  }
   res.redirect("/");
 });
 
